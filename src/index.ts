@@ -1,6 +1,6 @@
 import type { BaseLlmConnection, LlmRequest, LlmResponse } from '@google/adk';
 import { BaseLlm } from '@google/adk';
-import { AdapterFactory } from './adapter-factory.js';
+import { createAdapter } from './adapter-factory.js';
 import type { BaseAdapter } from './adapter.js';
 
 export interface ModelMuxOptions {
@@ -15,7 +15,7 @@ export class ModelMux extends BaseLlm {
 
   constructor(options: ModelMuxOptions) {
     super({ model: options.model });
-    this.adapter = AdapterFactory.createAdapter(
+    this.adapter = createAdapter(
       options.model,
       options.baseUrl,
       options.headers ?? {},
