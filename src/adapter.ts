@@ -23,12 +23,7 @@ export function providerError(provider: string, action: string, error: unknown):
 }
 
 export abstract class BaseAdapter {
-  constructor(
-    protected readonly model: string,
-    protected readonly baseUrl: string,
-    protected readonly headers: Record<string, string>,
-    protected readonly apiKey: string,
-  ) {}
+  constructor(protected readonly model: string) {}
 
   abstract stream(llmRequest: LlmRequest): AsyncGenerator<LlmResponse, void>;
   abstract generate(llmRequest: LlmRequest): Promise<LlmResponse>;

@@ -6,9 +6,9 @@ export class AnthropicAdapter extends BaseAdapter {
   private readonly client: Anthropic;
 
   constructor(model: string, baseUrl: string, headers: Record<string, string>, apiKey: string) {
-    super(model, baseUrl, headers, apiKey);
+    super(model);
     this.client = new Anthropic({
-      apiKey: apiKey,
+      apiKey,
       baseURL: baseUrl,
       defaultHeaders: headers,
     });

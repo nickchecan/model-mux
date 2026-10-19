@@ -3,6 +3,8 @@ import { BaseLlm } from '@google/adk';
 import { createAdapter } from './adapter-factory.js';
 import type { BaseAdapter } from './adapter.js';
 
+const DEFAULT_API_KEY = 'sk-000000000000000000000000000000000000000000000000';
+
 export interface ModelMuxOptions {
   model: string;
   baseUrl: string;
@@ -19,7 +21,7 @@ export class ModelMux extends BaseLlm {
       options.model,
       options.baseUrl,
       options.headers ?? {},
-      options.apiKey ?? 'sk-000000000000000000000000000000000000000000000000',
+      options.apiKey ?? DEFAULT_API_KEY,
     );
   }
 
@@ -36,8 +38,7 @@ export class ModelMux extends BaseLlm {
     yield oneShot;
   }
 
-  async connect(_llmRequest: LlmRequest): Promise<BaseLlmConnection> {
-    // For “live” sessions / bidirectional streaming
-    return this.adapter.connect(_llmRequest);
+  async connect(llmRequest: LlmRequest): Promise<BaseLlmConnection> {
+    return this.adapter.connect(llmRequest);
   }
 }

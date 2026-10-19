@@ -6,9 +6,9 @@ export class OpenAIAdapter extends BaseAdapter {
   private readonly client: OpenAI;
 
   constructor(model: string, baseUrl: string, headers: Record<string, string>, apiKey: string) {
-    super(model, baseUrl, headers, apiKey);
+    super(model);
     this.client = new OpenAI({
-      apiKey: apiKey,
+      apiKey,
       baseURL: baseUrl,
       defaultHeaders: headers,
     });
