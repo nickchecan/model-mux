@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { BaseLlmConnection, LlmRequest, LlmResponse } from '@google/adk';
-import { BaseAdapter } from '../adapter.js';
+import type { LlmRequest, LlmResponse } from '@google/adk';
+import { BaseAdapter, mapInput, providerError, textResponse } from '../adapter.js';
 
 export class AnthropicAdapter extends BaseAdapter {
   private readonly client: Anthropic;
@@ -15,73 +15,43 @@ export class AnthropicAdapter extends BaseAdapter {
   }
 
   async *stream(llmRequest: LlmRequest): AsyncGenerator<LlmResponse, void> {
-    const stream = this.client.messages.stream({
-      model: this.model,
-      max_tokens: llmRequest.config?.maxOutputTokens ?? 1024,
-      messages: [{ role: 'user', content: this.mapInput(llmRequest) }],
-      temperature: llmRequest.config?.temperature ?? undefined,
-    });
+    const stream = this.client.messages.stream(this.messageParams(llmRequest));
 
     try {
       for await (const event of stream) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-          yield {
-            content: {
-              role: 'model',
-              parts: [{ text: event.delta.text }],
-            },
-            partial: true,
-          } satisfies LlmResponse;
+          yield textResponse(event.delta.text, true);
         }
       }
 
-      yield {
-        content: {
-          role: 'model',
-          parts: [{ text: '' }],
-        },
-        partial: false,
-      } satisfies LlmResponse;
+      yield textResponse('', false);
     } catch (error) {
-      throw new Error(
-        `Anthropic stream creation failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      throw providerError('Anthropic', 'stream creation', error);
     }
   }
 
   async generate(llmRequest: LlmRequest): Promise<LlmResponse> {
     let response;
     try {
-      response = await this.client.messages.create({
-        model: this.model,
-        max_tokens: llmRequest.config?.maxOutputTokens ?? 1024,
-        messages: [{ role: 'user', content: this.mapInput(llmRequest) }],
-        temperature: llmRequest.config?.temperature ?? undefined,
-      });
+      response = await this.client.messages.create(this.messageParams(llmRequest));
     } catch (error) {
-      throw new Error(
-        `Anthropic response creation failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      throw providerError('Anthropic', 'response creation', error);
     }
 
-    return {
-      content: {
-        role: 'model',
-        parts: [
-          {
-            text: response.content
-              .filter((block) => block.type === 'text')
-              .map((block) => block.text)
-              .join(''),
-          },
-        ],
-      },
-    } satisfies LlmResponse;
+    const text = response.content
+      .filter((block) => block.type === 'text')
+      .map((block) => block.text)
+      .join('');
+
+    return textResponse(text);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async connect(llmRequest: LlmRequest): Promise<BaseLlmConnection> {
-    // Implementation for connecting to Anthropic
-    throw new Error('Not implemented');
+  private messageParams(llmRequest: LlmRequest) {
+    return {
+      model: this.model,
+      max_tokens: llmRequest.config?.maxOutputTokens ?? 1024,
+      messages: [{ role: 'user' as const, content: mapInput(llmRequest) }],
+      temperature: llmRequest.config?.temperature ?? undefined,
+    };
   }
 }

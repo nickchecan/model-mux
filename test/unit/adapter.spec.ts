@@ -1,7 +1,7 @@
 import type { BaseLlmConnection, LlmRequest, LlmResponse } from '@google/adk';
 import Chance from 'chance';
 import { describe, it, expect } from 'vitest';
-import { BaseAdapter } from '../../src/adapter.js';
+import { BaseAdapter, mapInput } from '../../src/adapter.js';
 
 // Concrete subclass to test the abstract BaseAdapter
 class TestAdapter extends BaseAdapter {
@@ -21,9 +21,6 @@ class TestAdapter extends BaseAdapter {
   }
   get exposedApiKey() {
     return this.apiKey;
-  }
-  exposedMapInput(req: LlmRequest) {
-    return this.mapInput(req);
   }
 
   async *stream(_llmRequest: LlmRequest): AsyncGenerator<LlmResponse, void> {
@@ -86,7 +83,7 @@ describe('BaseAdapter', () => {
       } as unknown as LlmRequest;
 
       // Act
-      const result = adapter.exposedMapInput(req);
+      const result = mapInput(req);
 
       // Assert
       expect(result).toBe(text1 + text2);
@@ -101,7 +98,7 @@ describe('BaseAdapter', () => {
       } as unknown as LlmRequest;
 
       // Act
-      const result = adapter.exposedMapInput(req);
+      const result = mapInput(req);
 
       // Assert
       expect(result).toBe(text1 + text2);
@@ -115,7 +112,7 @@ describe('BaseAdapter', () => {
       } as unknown as LlmRequest;
 
       // Act
-      const result = adapter.exposedMapInput(req);
+      const result = mapInput(req);
 
       // Assert
       expect(result).toBe(text1);
@@ -129,7 +126,7 @@ describe('BaseAdapter', () => {
       } as unknown as LlmRequest;
 
       // Act
-      const result = adapter.exposedMapInput(req);
+      const result = mapInput(req);
 
       // Assert
       expect(result).toBe(text1);
@@ -142,7 +139,7 @@ describe('BaseAdapter', () => {
       } as unknown as LlmRequest;
 
       // Act
-      const result = adapter.exposedMapInput(req);
+      const result = mapInput(req);
 
       // Assert
       expect(result).toBe('');
@@ -155,7 +152,7 @@ describe('BaseAdapter', () => {
       } as unknown as LlmRequest;
 
       // Act
-      const result = adapter.exposedMapInput(req);
+      const result = mapInput(req);
 
       // Assert
       expect(result).toBe('');
