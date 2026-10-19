@@ -1,12 +1,12 @@
 import type { BaseLlmConnection, LlmRequest, LlmResponse } from '@google/adk';
 import Chance from 'chance';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AdapterFactory } from '../../src/adapter-factory.js';
+import { createAdapter } from '../../src/adapter-factory.js';
 import type { BaseAdapter } from '../../src/adapter.js';
 import { ModelMux } from '../../src/index.js';
 
 vi.mock('../../src/adapter-factory.js', () => ({
-  AdapterFactory: { createAdapter: vi.fn() },
+  createAdapter: vi.fn(),
 }));
 
 describe('ModelMux', () => {
@@ -26,7 +26,7 @@ describe('ModelMux', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(AdapterFactory.createAdapter).mockReturnValue(fakeAdapter);
+    vi.mocked(createAdapter).mockReturnValue(fakeAdapter);
 
     options = {
       model: chance.word(),
@@ -37,13 +37,13 @@ describe('ModelMux', () => {
   });
 
   describe('constructor', () => {
-    it('should pass model, baseUrl, headers, and apiKey to AdapterFactory.createAdapter', () => {
+    it('should pass model, baseUrl, headers, and apiKey to createAdapter', () => {
       // Act
       new ModelMux(options);
 
       // Assert
-      expect(AdapterFactory.createAdapter).toHaveBeenCalledOnce();
-      expect(AdapterFactory.createAdapter).toHaveBeenCalledWith(
+      expect(createAdapter).toHaveBeenCalledOnce();
+      expect(createAdapter).toHaveBeenCalledWith(
         options.model,
         options.baseUrl,
         options.headers,

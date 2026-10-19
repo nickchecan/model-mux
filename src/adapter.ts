@@ -1,27 +1,35 @@
 import type { BaseLlmConnection, LlmRequest, LlmResponse } from '@google/adk';
 
-interface AdapterInterface {
-  stream(llmRequest: LlmRequest): AsyncGenerator<LlmResponse, void>;
-  generate(llmRequest: LlmRequest): Promise<LlmResponse>;
-  connect(llmRequest: LlmRequest): Promise<BaseLlmConnection>;
+export function mapInput(req: LlmRequest): string {
+  return req.contents
+    .flatMap((content) => content.parts ?? [])
+    .map((part) => part.text ?? '')
+    .join('');
 }
 
-export abstract class BaseAdapter implements AdapterInterface {
-  constructor(
-    protected readonly model: string,
-    protected readonly baseUrl: string,
-    protected readonly headers: Record<string, string>,
-    protected readonly apiKey: string,
-  ) {}
+export function textResponse(text: string, partial?: boolean): LlmResponse {
+  return {
+    content: {
+      role: 'model',
+      parts: [{ text }],
+    },
+    ...(partial !== undefined ? { partial } : {}),
+  };
+}
 
-  protected mapInput(req: LlmRequest): string {
-    return req.contents
-      .flatMap((content) => content.parts ?? [])
-      .map((part) => part.text ?? '')
-      .join('');
-  }
+export function providerError(provider: string, action: string, error: unknown): Error {
+  const detail = error instanceof Error ? error.message : String(error);
+  return new Error(`${provider} ${action} failed: ${detail}`);
+}
+
+export abstract class BaseAdapter {
+  constructor(protected readonly model: string) {}
 
   abstract stream(llmRequest: LlmRequest): AsyncGenerator<LlmResponse, void>;
   abstract generate(llmRequest: LlmRequest): Promise<LlmResponse>;
-  abstract connect(llmRequest: LlmRequest): Promise<BaseLlmConnection>;
+
+  async connect(_llmRequest: LlmRequest): Promise<BaseLlmConnection> {
+    // BaseLlm requires connect(). Live sessions are not supported.
+    throw new Error('Not implemented');
+  }
 }
